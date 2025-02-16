@@ -8,37 +8,41 @@
 // ****************************************************
 
 
-
 /*      *******************
             CONFIGURA O
               PWM PARA O
               BUZZER
         *******************/
-void play_tone(uint pin, uint slice, int frequency, int duration)
+void config_pwm_buzzer()
 {
-    // config buzzer
-    gpio_set_function(BUZZER_PIN, GPIO_FUNC_PWM);
-    uint slice1 = pwm_gpio_to_slice_num(BUZZER_PIN);
-
-    uint32_t wrap = (uint32_t)CLOCK_PWM / (frequency * PWM_DIVIDER);
-    pwm_set_wrap(slice1, wrap);
-    pwm_set_clkdiv(slice1, PWM_DIVIDER);
-    pwm_set_gpio_level(BUZZER_PIN, wrap / 2);
-    pwm_set_enabled(slice1, true);
-    sleep_ms(duration);
-    pwm_set_enabled(slice1, false);
-    sleep_ms(50); // Pequena pausa entre as notas
+    gpio_set_function(BUZZER_PIN, GPIO_FUNC_PWM);   // Configura o pino como PWM
+    uint slice = pwm_gpio_to_slice_num(BUZZER_PIN); // Obtem o slice PWM do pino
+    pwm_set_clkdiv(slice, PWM_DIVIDER);             // Aplica o divisor de clock
+    pwm_set_enabled(slice, true);                   // Habilita o PWM
 }
 
-void play_success_tone(uint slice)
-{
-    play_tone(BUZZER_PIN, slice, 1000, 200);
-    play_tone(BUZZER_PIN, slice, 1200, 200);
-    play_tone(BUZZER_PIN, slice, 1400, 300);
+
+// Função para tocar um tom no buzzer
+void play_tone(int frequency, int duration) {
+    uint slice = pwm_gpio_to_slice_num(BUZZER_PIN);
+    uint32_t wrap = CLOCK_PWM / (frequency * PWM_DIVIDER);  // Cálculo do wrap
+    pwm_set_wrap(slice, wrap);  // Define o wrap para a frequência
+    pwm_set_gpio_level(BUZZER_PIN, wrap / 2);  // Define o duty cycle
+
+    sleep_ms(duration);  // Toca o tom pelo tempo especificado
+    pwm_set_gpio_level(BUZZER_PIN, 0);  // Desliga o buzzer
 }
 
-void play_error_tone(uint slice)
-{
-    play_tone(BUZZER_PIN, slice, 400, 300);
-    play_tone(BUZZER_PIN, slice, 300, 300);
+
+// Função para tocar tom de sucesso
+void play_success_tone() {
+    play_tone(1000, 200);  // Toca um tom de 1000 Hz por 200ms
+    play_tone(1200, 200);  // Toca um tom de 1200 Hz por 200ms
+    play_tone(1400, 300);  // Toca um tom de 1400 Hz por 300ms
+}
+
+// Função para tocar tom de erro
+void play_error_tone() {
+    play_tone(400, 300);   // Toca um tom de 400 Hz por 300ms
+    play_tone(300, 300);   // Toca um tom de 300 Hz por 300ms
 }

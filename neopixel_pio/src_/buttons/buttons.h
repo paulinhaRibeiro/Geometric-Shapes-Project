@@ -42,7 +42,7 @@ extern bool read_stable_button(uint pin);
           O USÁRIO GANHOU
               OU NÃO
         *******************/
-extern void verifica_acerto(int gpio_pin, uint slice);
+extern void verifica_acerto(int gpio_pin);
 
 // Quando clicar em um dos botões
 extern void click_button(uint8_t *buffer);

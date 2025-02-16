@@ -37,6 +37,7 @@ struct render_area frame_area = {
     end_page : ssd1306_n_pages - 1
 };
 
+// Configura o Display
 void init_oled_display()
 {
     //  ________________DISPLAY ONLED______________________
@@ -53,6 +54,7 @@ void init_oled_display()
     calculate_render_area_buffer_length(&frame_area);
 }
 
+// Apaga o display
 void zerar_display(uint8_t *buffer)
 {
     // Zera o display
@@ -60,6 +62,7 @@ void zerar_display(uint8_t *buffer)
     render_on_display(buffer, &frame_area);
 }
 
+// Escreve as perguntas na tela
 void desenhar_display(uint8_t *buffer)
 {
     int y = 0;
@@ -72,6 +75,7 @@ void desenhar_display(uint8_t *buffer)
     render_on_display(buffer, &frame_area);
 }
 
+// escreve a pontuação do jogador no display
 void score_gamer(uint8_t *buffer)
 {
     char quantPontos[10];

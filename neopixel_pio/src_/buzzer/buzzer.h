@@ -9,6 +9,8 @@
 #define CLOCK_PWM 125000000
 #define PWM_DIVIDER 100.0
 
-extern void play_success_tone(uint slice);
-extern void play_error_tone(uint slice);
+// Função para configurar o PWM para o buzzer
+extern void config_pwm_buzzer();
+extern void play_success_tone();
+extern void play_error_tone();
 #endif

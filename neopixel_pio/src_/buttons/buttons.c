@@ -35,7 +35,7 @@ void click_button(uint8_t *buffer)
         sleep_ms(75);
     }
 }
-void verifica_acerto(int gpio_pin, uint slice)
+void verifica_acerto(int gpio_pin)
 {
     // DESLIGAR TODOS OS LEDS
     drawFrame(LEDS_DESLIGADO[0]);
@@ -45,20 +45,16 @@ void verifica_acerto(int gpio_pin, uint slice)
     {
 
         drawFrame(ACERTO_ERRO[0]);
-        play_success_tone(slice);
+        play_success_tone();
         pontos += 2.5;
     }
     else
     {
 
         drawFrame(ACERTO_ERRO[1]);
-        play_error_tone(slice);
+        play_error_tone();
     }
-    sleep_ms(300);
-    gpio_put(BUZZER_PIN, 0);                      // Garante que o pino esteja em nível baixo
-    gpio_set_function(BUZZER_PIN, GPIO_FUNC_SIO); // Retorna o pino para GPIO normal
-    gpio_set_dir(BUZZER_PIN, GPIO_OUT);           // Configura como saída
-    sleep_ms(600);
+    sleep_ms(1000);
     count++;
 }
 

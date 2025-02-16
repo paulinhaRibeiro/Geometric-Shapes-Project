@@ -227,6 +227,8 @@ int getIndex(int x, int y)
     }
 }
 
+
+// Percorre os elementos da lista e chama a função para desenhar na matriz de led
 void drawFrame(const uint8_t frame[5][5][3])
 {
 
