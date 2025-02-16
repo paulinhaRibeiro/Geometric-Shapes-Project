@@ -52,6 +52,10 @@ pico_sdk_init()
 add_executable(neopixel_pio 
                     neopixel_pio.c
                     inc/ssd1306_i2c.c
+                    src_/matriz_leds/matriz_leds.c
+                    src_/buttons/buttons.c
+                    src_/display/display.c
+                    src_/buzzer/buzzer.c
 )
 
 pico_set_program_name(neopixel_pio "neopixel_pio")
