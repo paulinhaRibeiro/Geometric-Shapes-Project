@@ -1,101 +1,132 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
-#include "hardware/pio.h"
-#include "hardware/clocks.h"
+//
+#include "src_/buzzer/buzzer.h"
+#include "hardware/pwm.h"
+//
+#include "src_/matriz_leds/matriz_leds.h"
+#include "src_/buttons/buttons.h"
+//
+#include "src_/display/display.h"
+#include "inc/ssd1306_i2c.h"
 
-// Biblioteca gerada pelo arquivo .pio durante compilação.
-#include "ws2818b.pio.h"
+/* ____________________ Função Principal     ____________________*/
+int main()
+{
+    // Verificar quando iniciar o jogo
+    bool state_button_joystick = false;
 
-// Definição do número de LEDs e pino.
-#define LED_COUNT 25
-#define LED_PIN 7
+    // Inicializa entradas e saídas.
+    stdio_init_all();
+    setup_buttons();
 
-// Definição de pixel GRB
-struct pixel_t {
-  uint8_t G, R, B; // Três valores de 8-bits compõem um pixel.
-};
-typedef struct pixel_t pixel_t;
-typedef pixel_t npLED_t; // Mudança de nome de "struct pixel_t" para "npLED_t" por clareza.
+    // // config buzzer
+    config_pwm_buzzer(); // Configura o PWM para o buzzer
 
-// Declaração do buffer de pixels que formam a matriz.
-npLED_t leds[LED_COUNT];
+    // Inicializa matriz de LEDs NeoPixel.
+    npInit(LED_PIN);
 
-// Variáveis para uso da máquina PIO.
-PIO np_pio;
-uint sm;
+    // _______________
+    // Inicializa o display
+    init_oled_display();
+    // Buffer do display
+    uint8_t ssd[ssd1306_buffer_length];
 
-/**
- * Inicializa a máquina PIO para controle da matriz de LEDs.
- */
-void npInit(uint pin) {
+    // zera o display inteiro
+    zerar_display(ssd);
 
-  // Cria programa PIO.
-  uint offset = pio_add_program(pio0, &ws2818b_program);
-  np_pio = pio0;
+    // Loop infinito.
+    while (true)
+    {
+        // ___________________Momento inicial,
+        // enquanto não clicar no botão do joystick, não vai para as forma geometricas.
+        while (state_button_joystick == false)
+        {
+            for (size_t i = 0; i < 2; i++)
+            {
+                if (read_stable_button(SW_PIN))
+                {
+                    while (gpio_get(SW_PIN) == 0)
+                        ; // Aguarda soltar o botão
+                    state_button_joystick = true;
+                    drawFrame(LEDS_DESLIGADO[0]);
+                    sleep_ms(75);
 
-  // Toma posse de uma máquina PIO.
-  sm = pio_claim_unused_sm(np_pio, false);
-  if (sm < 0) {
-    np_pio = pio1;
-    sm = pio_claim_unused_sm(np_pio, true); // Se nenhuma máquina estiver livre, panic!
-  }
+                    // _____________ Repetindo as formas geometricas
+                    drawFrame(FORMAS_GEOMETRICAS[count]);
+                    sleep_ms(75);
+                    // ________END__ Repetindo as formas geometricas
 
-  // Inicia programa na máquina PIO obtida.
-  ws2818b_program_init(np_pio, sm, offset, pin, 800000.f);
+                    // _EXIBIR 1 Questão Display
+                    // zera o display inteiro
+                    zerar_display(ssd);
+                    sleep_ms(75);
+                    //  DESENHA NA TELA
+                    desenhar_display(ssd);
+                    sleep_ms(75);
+                    break;
+                }
 
-  // Limpa buffer de pixels.
-  for (uint i = 0; i < LED_COUNT; ++i) {
-    leds[i].R = 0;
-    leds[i].G = 0;
-    leds[i].B = 0;
-  }
-}
+                drawFrame(START_FACE[i]);
+                sleep_ms(300);
+            }
+        }
+        // __________END______Momento inicial
 
-/**
- * Atribui uma cor RGB a um LED.
- */
-void npSetLED(const uint index, const uint8_t r, const uint8_t g, const uint8_t b) {
-  leds[index].R = r;
-  leds[index].G = g;
-  leds[index].B = b;
-}
+        // ____________________________________________
+        // __________________ BOTÂO A _________________
+        // --------------------------------------------
+        // Se clicar no botão A
+        if (read_stable_button(BUTTON_A_PIN))
+        {
+            while (gpio_get(BUTTON_A_PIN) == 0)
+                ; // Aguarda soltar o botão
 
-/**
- * Limpa o buffer de pixels.
- */
-void npClear() {
-  for (uint i = 0; i < LED_COUNT; ++i)
-    npSetLED(i, 0, 0, 0);
-}
+            verifica_acerto(BUTTON_A_PIN);
 
-/**
- * Escreve os dados do buffer nos LEDs.
- */
-void npWrite() {
-  // Escreve cada dado de 8-bits dos pixels em sequência no buffer da máquina PIO.
-  for (uint i = 0; i < LED_COUNT; ++i) {
-    pio_sm_put_blocking(np_pio, sm, leds[i].G);
-    pio_sm_put_blocking(np_pio, sm, leds[i].R);
-    pio_sm_put_blocking(np_pio, sm, leds[i].B);
-  }
-  sleep_us(100); // Espera 100us, sinal de RESET do datasheet.
-}
+            click_button(ssd);
+        }
+        // _________END______ BOTÂO A
 
-int main() {
+        // ____________________________________________
+        // __________________ BOTÂO B _________________
+        // --------------------------------------------
+        // Se clicar no botão B
+        if (read_stable_button(BUTTON_B_PIN))
+        {
+            while (gpio_get(BUTTON_B_PIN) == 0)
+                ; // Aguarda soltar o botão
+            verifica_acerto(BUTTON_B_PIN);
+            sleep_ms(100);
+            // Para não ficar chamando sempre o desenho no led e somente se o contador for menor q o tamanho da lista.
+            click_button(ssd);
+        }
+        // _________END______ BOTÂO A
 
-  // Inicializa entradas e saídas.
-  stdio_init_all();
+        // _______________ RESTART PERGUNTAS
+        if (count == count_of(RESPOSTAS_CORRETAS))
+        {              // contador maior que tamanho da lista
+            count = 0; // reseta o contador
+            state_button_joystick = false;
+            drawFrame(LEDS_DESLIGADO[0]);
 
-  // Inicializa matriz de LEDs NeoPixel.
-  npInit(LED_PIN);
-  npClear();
+            // Deixa o led desligado por 6 segundos
+            sleep_ms(100);
 
-  // Aqui, você desenha nos LEDs.
+            // zera o display inteiro
+            zerar_display(ssd);
+            // escreve a pontuação na tela
+            score_gamer(ssd);
+            pontos = 0; // resenta a pontuação
+            sleep_ms(75);
+            sleep_ms(4000);
 
-  npWrite(); // Escreve os dados nos LEDs.
+            // zera o display inteiro
+            zerar_display(ssd);
+            sleep_ms(1000);
+        }
+        // ______END_______ RESTART PERGUNTAS
 
-  // Não faz mais nada. Loop infinito.
-  while (true) {
-    sleep_ms(1000);
-  }
+        sleep_ms(10);
+    }
 }
